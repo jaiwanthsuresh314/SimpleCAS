@@ -2,9 +2,6 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class Evaluator {
-    private static boolean isIdentifier(String value) {
-        return value.matches("[A-Za-z_][A-Za-z0-9_]*");
-    }
     public static int evaluate(ASTNode root) {
         return evaluate(root, new HashMap<>());
     }
@@ -42,7 +39,7 @@ public class Evaluator {
             }
             return result;
         } else if (root.value.equals("=")) {
-            if (root.left == null || !isIdentifier(root.left.value)) {
+            if (root.left == null || !LanguageRules.isIdentifier(root.left.value)) {
                 throw new IllegalArgumentException(
                         "Invalid assignment target: " + root.left);
             }
@@ -50,10 +47,10 @@ public class Evaluator {
             int value = evaluate(root.right, variables);
             variables.put(root.left.value, value);
             return value;
-        } else if (root.value.matches("\\d+")) {
+        } else if (LanguageRules.isNumber(root.value)) {
             return Integer.parseInt(root.value);
         }
-        else if (isIdentifier(root.value)) {
+        else if (LanguageRules.isIdentifier(root.value)) {
             if (!variables.containsKey(root.value)) {
                 throw new IllegalArgumentException(
                         "Undefined variable: " + root.value

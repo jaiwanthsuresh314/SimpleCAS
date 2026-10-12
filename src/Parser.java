@@ -30,12 +30,8 @@ public class Parser {
         return tokens.get(pos + 1);
     }
 
-    private boolean isIdentifier(String token) {
-        return token.matches("[A-Za-z_][A-Za-z0-9_]*");
-    }
-
     private ASTNode Statement() {
-        if(isIdentifier(currToken()) && peekToken().equals("ASSIGN")) {
+        if(LanguageRules.isIdentifier(currToken()) && peekToken().equals("ASSIGN")) {
             String id = currToken();
             pos++;
             match("ASSIGN");
@@ -111,11 +107,11 @@ public class Parser {
             ASTNode node = E();
             match("RPAREN");
             return node;
-        } else if(currToken().matches("\\d+")) {
+        } else if(LanguageRules.isNumber(currToken())) {
             String number = currToken();
             pos++;
             return new ASTNode(number);
-        } else if(currToken().matches("[A-Za-z_][A-Za-z0-9_]*")) {
+        } else if(LanguageRules.isIdentifier(currToken())) {
             String id = currToken();
             pos++;
             return new ASTNode(id);
