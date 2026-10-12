@@ -22,15 +22,16 @@ input text -> Lexer -> tokens -> Parser -> AST -> Evaluator -> int result
 
 ## Current supported grammar
 
-The implementation currently supports integer literals, parentheses, addition, subtraction, multiplication, division, unary minus, and exponentiation:
+The implementation currently supports integer literals, identifiers, parentheses, addition, subtraction, multiplication, division, unary minus, and exponentiation:
 
 ```text
 E       -> T ((ADD | SUB) T)*
 T       -> F ((MUL | DIV) F)*
 F       -> SUB F | P
 P       -> Primary (POW F)?
-Primary -> ( E ) | N
+Primary -> ( E ) | N | IDENTIFIER
 N       -> one or more decimal digits
+IDENTIFIER -> letter or underscore followed by letters, digits, or underscores
 ```
 
 This structure gives exponentiation higher precedence than multiplication and division, which are higher precedence than addition and subtraction. The loops in `E()` and `T()` make the binary operator groups left-associative. The recursive `P()`/`F()` relationship makes exponentiation right-associative, so `2^3^2` means `2^(3^2)`. Unary minus is handled in `F()`.
@@ -54,15 +55,16 @@ ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN
 
 ## Current implementation
 
-- `Lexer.tokenize()` groups consecutive digits, recognizes whitespace, operators, and parentheses, and rejects unknown characters with `Invalid character: ...`.
+- `Lexer.tokenize()` groups consecutive digits, recognizes identifiers, whitespace, operators, and parentheses, and rejects unknown characters with `Invalid character: ...`.
 - `Parser.E()` parses addition and subtraction.
 - `Parser.T()` parses multiplication and division.
 - `Parser.F()` parses unary minus and delegates ordinary factors to `P()`.
 - `Parser.P()` parses exponentiation and constructs `^` nodes. Its recursive right operand gives exponentiation right associativity.
-- `Parser.Primary()` parses parenthesized expressions and integer literals.
+- `Parser.Primary()` parses parenthesized expressions, integer literals, and identifiers.
 - `Parser.parse()` rejects leftover tokens after the expression and returns the AST root on success.
 - `ASTNode` stores a `value`, `left`, and `right`. Binary operator nodes store `+`, `-`, `*`, or `/`; unary-minus nodes store `NEG` and use their left child.
 - `Evaluator.evaluate()` returns an `int` and handles all five binary operators plus `NEG`.
+- `Evaluator.evaluate(root, variables)` resolves identifiers through a `Map<String, Integer>` and reports undefined variables clearly.
 - Exponentiation uses repeated integer multiplication. Negative exponents are rejected because the evaluator currently represents only integer results.
 - Division is integer division because the evaluator returns `int`. For example, `10/3` evaluates to `3`.
 - Division by zero is explicitly rejected with `ArithmeticException("Division by zero")`.
@@ -116,6 +118,8 @@ The following expressions were compiled and executed successfully using the curr
 | `2^3*4` | `32` |
 | `-2^2` | `-4` |
 | `(-2)^2` | `4` |
+| `x+3` with `x=5` | `8` |
+| `x^2+y` with `x=5,y=2` | `27` |
 
 The following malformed or unsafe expressions were rejected as expected:
 
@@ -135,13 +139,14 @@ The following malformed or unsafe expressions were rejected as expected:
 - `SimpleCASTest` can be run with `java -cp out SimpleCASTest`; it exits with code `1` if any check fails.
 - There is no external test framework or build configuration; `SimpleCASTest` is a dependency-free regression harness.
 - Division uses Java integer-division semantics; decimal values are not supported.
-- Negative exponents, variables, symbolic simplification, and symbolic differentiation are not implemented.
+- Assignment syntax such as `x=5` is not implemented; variables are currently supplied through a map.
+- Negative exponents, symbolic simplification, and symbolic differentiation are not implemented.
 - The parser and evaluator use unchecked exceptions for invalid input and evaluation errors; Main currently catches and formats them for the user.
 - `ASTNode` fields have package-private visibility and no accessor methods.
 
 ## Recommended next direction
 
-The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, malformed input, division by zero, and selected AST shapes. The next focus should be extending those tests whenever the grammar changes, then deciding whether integer overflow should be detected during arithmetic.
+The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, malformed input, undefined variables, division by zero, and selected AST shapes. The next focus should be assignment syntax or a dedicated semantic-analysis phase, not both at once.
 
 ## Design decisions
 

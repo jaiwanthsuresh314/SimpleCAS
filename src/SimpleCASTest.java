@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 public class SimpleCASTest {
     private static int passed = 0;
     private static int failed = 0;
@@ -17,13 +20,22 @@ public class SimpleCASTest {
         testValue("-2^2", -4);
         testValue("(-2)^2", 4);
 
+        Map<String, Integer> variables = new HashMap<>();
+        variables.put("x", 5);
+        variables.put("y", 2);
+        testVariableValue("x+3", variables, 8);
+        testVariableValue("2*x", variables, 10);
+        testVariableValue("x^2+y", variables, 27);
+        testVariableValue("x-y*3", variables, -1);
+
         testRejected("10/0", "Division by zero");
         testRejected("2+", "Unexpected Token: EOF");
-        testRejected("()", "Unexpected Token: RPAREN");
+        testRejected("()", "Expected RPAREN, found EOF");
         testRejected("2--", "Unexpected Token: EOF");
-        testRejected("12a+3", "Invalid character: a");
+        testRejected("12a+3", "Unexpected Token: a");
         testRejected("2^-3",
                 "Negative exponents are not supported for integer evaluation");
+        testUndefinedVariable("z+1", variables);
 
         testAst("8-3-2", "-", "-", "8", "3", "2");
         testUnaryAst("2*-3");
@@ -56,6 +68,30 @@ public class SimpleCASTest {
             check(e.getMessage().equals(expectedMessage),
                     expression + " expected error '" + expectedMessage
                             + "', got '" + e.getMessage() + "'");
+        }
+    }
+
+    private static void testVariableValue(String expression,
+                                          Map<String, Integer> variables,
+                                          int expected) {
+        try {
+            ASTNode root = parse(expression);
+            int actual = Evaluator.evaluate(root, variables);
+            check(actual == expected,
+                    expression + " expected " + expected + ", got " + actual);
+        } catch (RuntimeException e) {
+            fail(expression + " unexpectedly failed: " + e.getMessage());
+        }
+    }
+
+    private static void testUndefinedVariable(String expression,
+                                               Map<String, Integer> variables) {
+        try {
+            Evaluator.evaluate(parse(expression), variables);
+            fail(expression + " should have been rejected");
+        } catch (RuntimeException e) {
+            check(e.getMessage().equals("Undefined variable: z"),
+                    expression + " reports an undefined variable");
         }
     }
 
@@ -103,7 +139,7 @@ public class SimpleCASTest {
     }
 
     private static ASTNode parse(String expression) {
-        return new Parser(Lexer.tokenize(expression)).parse();
+        return new Parser(new Lexer(expression).tokenize()).parse();
     }
 
     private static void check(boolean condition, String message) {

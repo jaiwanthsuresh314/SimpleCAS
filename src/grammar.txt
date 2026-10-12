@@ -2,9 +2,11 @@ E       -> T ((ADD | SUB) T)*
 T       -> F ((MUL | DIV) F)*
 F       -> SUB F | P
 P       -> Primary (POW F)?
-Primary -> LPAREN E RPAREN | NUMBER
+Primary -> LPAREN E RPAREN | NUMBER | IDENTIFIER
 NUMBER  -> DIGIT+
+IDENTIFIER -> LETTER (LETTER | DIGIT | '_')*
 DIGIT   -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+LETTER  -> A-Z | a-z | '_'
 
 // ADD, SUB, MUL, DIV, POW, LPAREN, and RPAREN are lexer token names.
 // E and T use loops, so addition/subtraction and multiplication/division

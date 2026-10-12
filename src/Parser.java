@@ -90,13 +90,15 @@ public class Parser {
             ASTNode node = E();
             match("RPAREN");
             return node;
-        }
-        else if(currToken().matches("\\d+")) {
+        } else if(currToken().matches("\\d+")) {
             String number = currToken();
             pos++;
             return new ASTNode(number);
-        }
-        else {
+        } else if(currToken().matches("[A-Za-z_][A-Za-z0-9_]*")) {
+            String id = currToken();
+            pos++;
+            return new ASTNode(id);
+        } else {
             throw new IllegalArgumentException("Unexpected Token: " + currToken());
         }
     }
