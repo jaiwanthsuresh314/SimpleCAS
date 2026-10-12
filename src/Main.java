@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Scanner;
 import java.util.Map;
 import java.util.HashMap;
@@ -38,33 +36,6 @@ public class Main {
 
         if (exitCode != 0) {
             System.exit(exitCode);
-        }
-    }
-
-    public static void traverse(ASTNode root) {
-        if(root != null) {
-            traverse(root.left);
-            System.out.print(root.value);
-            traverse(root.right);
-        }
-    }
-
-    public static void levelOrder(ASTNode root) {
-        if (root == null) return;
-
-        Queue<ASTNode> q = new LinkedList<>();
-        q.add(root);
-
-        while (!q.isEmpty()) {
-            ASTNode curr = q.poll();
-            System.out.print(curr.value + " ");
-
-            if (curr.left != null) {
-                q.add(curr.left);
-            }
-            if (curr.right != null) {
-                q.add(curr.right);
-            }
         }
     }
 }

@@ -6,7 +6,7 @@ Build a small Computer Algebra System (CAS) in Java, incrementally, while learni
 
 ## Current architecture
 
-- `Main.java` reads expressions and assignment statements line by line from standard input, coordinates the pipeline, and contains inorder and level-order AST traversal helpers.
+- `Main.java` reads expressions and assignment statements line by line from standard input and coordinates the pipeline.
 - `SimpleCASTest.java` is a dependency-free regression test program for values, errors, and selected AST shapes.
 - `Lexer.java` tokenizes integer arithmetic expressions.
 - `Parser.java` uses recursive descent to construct an AST.
@@ -76,7 +76,6 @@ ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN, ASSIGN
 - Exponentiation uses repeated integer multiplication. Negative exponents are rejected because the evaluator currently represents only integer results.
 - Division is integer division because the evaluator returns `int`. For example, `10/3` evaluates to `3`.
 - Division by zero is explicitly rejected with `ArithmeticException("Division by zero")`.
-- AST traversal helpers remain in `Main.java`.
 
 ## Compilation and execution
 
@@ -163,33 +162,3 @@ The following malformed or unsafe expressions were rejected as expected:
 ## Recommended next direction
 
 The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, assignments, malformed input, undefined variables, division by zero, and selected AST shapes. The next focus should be adding direct semantic-analysis tests and then improving the language’s type/value model.
-
-## Design decisions
-
-- Keep the code beginner-friendly and explain changes step by step.
-- Keep Lexer, Parser, ASTNode, and Evaluator as separate components.
-- Continue using recursive descent while the grammar remains small.
-- Use `.equals()` for Java string comparisons.
-- Reject leftover tokens after parsing.
-- Do not silently skip invalid characters in the lexer.
-- `Integer.parseInt()` is acceptable for converting integer literal tokens.
-- Preserve the existing architecture and make small, deliberate changes.
-
-## How to collaborate
-
-Explain the reasoning behind each change. Avoid rewriting the project unnecessarily. Preserve the existing architecture where possible, point out bugs, and suggest tests for valid and invalid expressions. Do not add features without explaining their purpose.
-
-## Git workflow
-
-From the project root:
-
-```powershell
-git status
-git add .
-git commit -m "Build integer expression evaluator"
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-git branch -M main
-git push -u origin main
-```
-
-Review `git status` and `git diff --cached` before committing. Do not commit compiled output, IDE metadata, or generated render directories; they are excluded by `.gitignore`.
