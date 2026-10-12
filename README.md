@@ -6,18 +6,21 @@ Build a small Computer Algebra System (CAS) in Java, incrementally, while learni
 
 ## Current architecture
 
-- `Main.java` reads one expression from standard input, coordinates the pipeline, and contains inorder and level-order AST traversal helpers.
+- `Main.java` reads expressions and assignment statements line by line from standard input, coordinates the pipeline, and contains inorder and level-order AST traversal helpers.
 - `SimpleCASTest.java` is a dependency-free regression test program for values, errors, and selected AST shapes.
 - `Lexer.java` tokenizes integer arithmetic expressions.
 - `Parser.java` uses recursive descent to construct an AST.
 - `ASTNode.java` represents expression-tree nodes.
 - `Evaluator.java` recursively evaluates the AST.
-- `Semantic.java` is currently an empty placeholder and is not used.
+- `LanguageRules.java` centralizes identifier, number, and binary-operator classification.
+- `Semantic.java` recursively checks AST structure and rejects undefined variables, but is not yet called by `Main.java`.
 
 The pipeline is:
 
 ```text
 input text -> Lexer -> tokens -> Parser -> AST -> Evaluator -> int result
+
+Semantic analysis is implemented as a separate component and should be inserted between the parser and evaluator in the next step.
 ```
 
 ## Current supported grammar
@@ -52,7 +55,7 @@ Examples:
 The lexer emits multi-digit integers as single tokens and uses these operator and delimiter tokens:
 
 ```text
-ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN
+ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN, ASSIGN
 ```
 
 ## Current implementation
@@ -65,10 +68,13 @@ ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN
 - `Parser.Primary()` parses parenthesized expressions, integer literals, and identifiers.
 - `Parser.parseStatement()` parses either an assignment or an ordinary expression. Assignment nodes store `=` with an identifier on the left and an expression on the right.
 - `Parser.parse()` rejects leftover tokens after the expression and returns the AST root on success.
-- `ASTNode` stores a `value`, `left`, and `right`. Binary operator nodes store `+`, `-`, `*`, or `/`; unary-minus nodes store `NEG` and use their left child.
+- `Parser.parseStatement()` uses lookahead to distinguish an assignment from an expression beginning with an identifier.
+- `ASTNode` stores a `value`, `left`, and `right`. Binary operator nodes store `+`, `-`, `*`, `/`, or `^`; assignment nodes store `=`; unary-minus nodes store `NEG` and use their left child.
+- `LanguageRules` provides shared checks for valid identifiers, integer literals, and binary operators.
 - `Evaluator.evaluate()` returns an `int` and handles all five binary operators plus `NEG`.
 - `Evaluator.evaluate(root, variables)` resolves identifiers through a `Map<String, Integer>` and reports undefined variables clearly.
 - Assignment evaluation stores the computed value in the supplied map.
+- `Semantic.analyze()` traverses assignments, unary nodes, binary nodes, numbers, and identifiers. It checks assignment targets and reports undefined variables without modifying the symbol table.
 - Exponentiation uses repeated integer multiplication. Negative exponents are rejected because the evaluator currently represents only integer results.
 - Division is integer division because the evaluator returns `int`. For example, `10/3` evaluates to `3`.
 - Division by zero is explicitly rejected with `ArithmeticException("Division by zero")`.
@@ -142,23 +148,23 @@ The following malformed or unsafe expressions were rejected as expected:
 | `2+` | `Unexpected Token: EOF` |
 | `()` | `Unexpected Token: RPAREN` |
 | `2--` | `Unexpected Token: EOF` |
-| `12a+3` | `Invalid character: a` |
+| `12a+3` | `Unexpected Token: a` |
 | `2^-3` | `Negative exponents are not supported for integer evaluation` |
 
 ## Known limitations
 
-- `Main.java` reads one input line, reports lexer/parser/evaluator errors as `Error: ...`, returns exit code `1` on failure, and does not provide a loop for evaluating multiple expressions.
+- `Main.java` reads multiple input lines, reports errors with their line number, continues after an error, and returns exit code `1` if any line fails.
 - `SimpleCASTest` can be run with `java -cp out SimpleCASTest`; it exits with code `1` if any check fails.
 - There is no external test framework or build configuration; `SimpleCASTest` is a dependency-free regression harness.
 - Division uses Java integer-division semantics; decimal values are not supported.
-- Main reports errors by line and continues processing later lines. It exits with code `1` if any line fails.
+- `Main` currently calls the evaluator directly; the implemented `Semantic.analyze()` phase is not yet integrated into the runtime pipeline.
 - Negative exponents, symbolic simplification, and symbolic differentiation are not implemented.
 - The parser and evaluator use unchecked exceptions for invalid input and evaluation errors; Main currently catches and formats them for the user.
 - `ASTNode` fields have package-private visibility and no accessor methods.
 
 ## Recommended next direction
 
-The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, malformed input, undefined variables, division by zero, and selected AST shapes. The next focus should be assignment syntax or a dedicated semantic-analysis phase, not both at once.
+The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, assignments, malformed input, undefined variables, division by zero, and selected AST shapes. The next focus should be integrating the existing semantic-analysis phase into `Main` and adding direct semantic-analysis tests.
 
 ## Design decisions
 
