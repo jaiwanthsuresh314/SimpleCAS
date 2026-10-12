@@ -22,7 +22,7 @@ input text -> Lexer -> tokens -> Parser -> AST -> Evaluator -> int result
 
 ## Current supported grammar
 
-The implementation currently supports integer literals, identifiers, parentheses, addition, subtraction, multiplication, division, unary minus, and exponentiation:
+The implementation currently supports integer literals, identifiers, assignment statements, parentheses, addition, subtraction, multiplication, division, unary minus, and exponentiation:
 
 ```text
 E       -> T ((ADD | SUB) T)*
@@ -32,6 +32,8 @@ P       -> Primary (POW F)?
 Primary -> ( E ) | N | IDENTIFIER
 N       -> one or more decimal digits
 IDENTIFIER -> letter or underscore followed by letters, digits, or underscores
+
+Statement -> IDENTIFIER ASSIGN E | E
 ```
 
 This structure gives exponentiation higher precedence than multiplication and division, which are higher precedence than addition and subtraction. The loops in `E()` and `T()` make the binary operator groups left-associative. The recursive `P()`/`F()` relationship makes exponentiation right-associative, so `2^3^2` means `2^(3^2)`. Unary minus is handled in `F()`.
@@ -61,10 +63,12 @@ ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN
 - `Parser.F()` parses unary minus and delegates ordinary factors to `P()`.
 - `Parser.P()` parses exponentiation and constructs `^` nodes. Its recursive right operand gives exponentiation right associativity.
 - `Parser.Primary()` parses parenthesized expressions, integer literals, and identifiers.
+- `Parser.parseStatement()` parses either an assignment or an ordinary expression. Assignment nodes store `=` with an identifier on the left and an expression on the right.
 - `Parser.parse()` rejects leftover tokens after the expression and returns the AST root on success.
 - `ASTNode` stores a `value`, `left`, and `right`. Binary operator nodes store `+`, `-`, `*`, or `/`; unary-minus nodes store `NEG` and use their left child.
 - `Evaluator.evaluate()` returns an `int` and handles all five binary operators plus `NEG`.
 - `Evaluator.evaluate(root, variables)` resolves identifiers through a `Map<String, Integer>` and reports undefined variables clearly.
+- Assignment evaluation stores the computed value in the supplied map.
 - Exponentiation uses repeated integer multiplication. Negative exponents are rejected because the evaluator currently represents only integer results.
 - Division is integer division because the evaluator returns `int`. For example, `10/3` evaluates to `3`.
 - Division by zero is explicitly rejected with `ArithmeticException("Division by zero")`.
@@ -89,11 +93,18 @@ java -cp out SimpleCASTest
 
 The test command should finish with `Tests failed: 0`.
 
-`Main.java` prompts for an expression and reads one line from standard input. For example:
+`Main.java` prompts once, then reads and evaluates statements until standard input ends. The variable map persists for the lifetime of the process. For example:
 
 ```powershell
-"-(2+3)" | java -cp out Main
+@"
+x=5
+x+3
+y=x^2+1
+y
+"@ | java -cp out Main
 ```
+
+This session prints `5`, `8`, `26`, and `26`. In an interactive Windows console, finish input with `Ctrl+Z` followed by Enter.
 
 ## Verified expressions
 
@@ -120,6 +131,7 @@ The following expressions were compiled and executed successfully using the curr
 | `(-2)^2` | `4` |
 | `x+3` with `x=5` | `8` |
 | `x^2+y` with `x=5,y=2` | `27` |
+| `x=5` followed by `y=x^2+1` | `5`, then `26` |
 
 The following malformed or unsafe expressions were rejected as expected:
 
@@ -139,7 +151,7 @@ The following malformed or unsafe expressions were rejected as expected:
 - `SimpleCASTest` can be run with `java -cp out SimpleCASTest`; it exits with code `1` if any check fails.
 - There is no external test framework or build configuration; `SimpleCASTest` is a dependency-free regression harness.
 - Division uses Java integer-division semantics; decimal values are not supported.
-- Assignment syntax such as `x=5` is not implemented; variables are currently supplied through a map.
+- Main reports errors by line and continues processing later lines. It exits with code `1` if any line fails.
 - Negative exponents, symbolic simplification, and symbolic differentiation are not implemented.
 - The parser and evaluator use unchecked exceptions for invalid input and evaluation errors; Main currently catches and formats them for the user.
 - `ASTNode` fields have package-private visibility and no accessor methods.

@@ -23,6 +23,27 @@ public class Parser {
         }
     }
 
+    private String peekToken() {
+        if (pos + 1 >= tokens.size()) {
+            return "EOF";
+        }
+        return tokens.get(pos + 1);
+    }
+
+    private boolean isIdentifier(String token) {
+        return token.matches("[A-Za-z_][A-Za-z0-9_]*");
+    }
+
+    private ASTNode Statement() {
+        if(isIdentifier(currToken()) && peekToken().equals("ASSIGN")) {
+            String id = currToken();
+            pos++;
+            match("ASSIGN");
+            return new ASTNode("=", new ASTNode(id), E());
+        }
+        return E();
+    }
+
     private ASTNode E() {
         ASTNode left = T();
         while(currToken().equals("ADD") || currToken().equals("SUB")) {
@@ -105,6 +126,16 @@ public class Parser {
     public ASTNode parse() {
         pos = 0;
         ASTNode root = E();
+
+        if(pos != tokens.size()) {
+            throw new IllegalArgumentException("Unexpected Token: " + currToken());
+        }
+        return root;
+    }
+
+    public ASTNode parseStatement() {
+        pos = 0;
+        ASTNode root = Statement();
 
         if(pos != tokens.size()) {
             throw new IllegalArgumentException("Unexpected Token: " + currToken());

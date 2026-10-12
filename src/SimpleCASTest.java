@@ -27,6 +27,9 @@ public class SimpleCASTest {
         testVariableValue("2*x", variables, 10);
         testVariableValue("x^2+y", variables, 27);
         testVariableValue("x-y*3", variables, -1);
+        testAssignment("x=5", variables, 5);
+        testAssignment("y=x^2+1", variables, 26);
+        testVariableValue("y", variables, 26);
 
         testRejected("10/0", "Division by zero");
         testRejected("2+", "Unexpected Token: EOF");
@@ -92,6 +95,19 @@ public class SimpleCASTest {
         } catch (RuntimeException e) {
             check(e.getMessage().equals("Undefined variable: z"),
                     expression + " reports an undefined variable");
+        }
+    }
+
+    private static void testAssignment(String expression,
+                                       Map<String, Integer> variables,
+                                       int expected) {
+        try {
+            ASTNode root = new Parser(new Lexer(expression).tokenize()).parseStatement();
+            int actual = Evaluator.evaluate(root, variables);
+            check(actual == expected,
+                    expression + " expected " + expected + ", got " + actual);
+        } catch (RuntimeException e) {
+            fail(expression + " unexpectedly failed: " + e.getMessage());
         }
     }
 

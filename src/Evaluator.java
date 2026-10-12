@@ -41,6 +41,15 @@ public class Evaluator {
                 result *= base;
             }
             return result;
+        } else if (root.value.equals("=")) {
+            if (root.left == null || !isIdentifier(root.left.value)) {
+                throw new IllegalArgumentException(
+                        "Invalid assignment target: " + root.left);
+            }
+
+            int value = evaluate(root.right, variables);
+            variables.put(root.left.value, value);
+            return value;
         } else if (root.value.matches("\\d+")) {
             return Integer.parseInt(root.value);
         }

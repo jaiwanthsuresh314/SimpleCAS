@@ -50,6 +50,8 @@ public class Lexer {
             return "LPAREN";
         } else if(input.charAt(pos) == ')') {
             return "RPAREN";
+        } else if(input.charAt(pos) == '=') {
+          return "ASSIGN";
         } else {
             throw new IllegalArgumentException("Invalid character: " + input.charAt(pos));
         }
@@ -58,7 +60,6 @@ public class Lexer {
         ArrayList<String> tokens = new ArrayList<>();
         while(pos < input.length()) {
             char curr = input.charAt(pos);
-
             if(Character.isWhitespace(curr)) {
                 pos++;
             } else if(Character.isDigit(curr)) {
@@ -70,8 +71,6 @@ public class Lexer {
                 pos++;
             }
         }
-
-
         return tokens;
     }
 }
