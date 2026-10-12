@@ -26,6 +26,7 @@ public class Main {
             try {
                 ArrayList<String> tokens = new Lexer(input).tokenize();
                 ASTNode root = new Parser(tokens).parseStatement();
+                Semantic.analyze(root, variables);
                 System.out.println(Evaluator.evaluate(root, variables));
             } catch (IllegalArgumentException | ArithmeticException e) {
                 System.out.println("Error on line " + lineNumber + ": " + e.getMessage());

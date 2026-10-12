@@ -13,14 +13,12 @@ Build a small Computer Algebra System (CAS) in Java, incrementally, while learni
 - `ASTNode.java` represents expression-tree nodes.
 - `Evaluator.java` recursively evaluates the AST.
 - `LanguageRules.java` centralizes identifier, number, and binary-operator classification.
-- `Semantic.java` recursively checks AST structure and rejects undefined variables, but is not yet called by `Main.java`.
+- `Semantic.java` recursively checks AST structure and rejects undefined variables before evaluation.
 
 The pipeline is:
 
 ```text
-input text -> Lexer -> tokens -> Parser -> AST -> Evaluator -> int result
-
-Semantic analysis is implemented as a separate component and should be inserted between the parser and evaluator in the next step.
+input text -> Lexer -> tokens -> Parser -> AST -> Semantic analysis -> Evaluator -> int result
 ```
 
 ## Current supported grammar
@@ -157,14 +155,14 @@ The following malformed or unsafe expressions were rejected as expected:
 - `SimpleCASTest` can be run with `java -cp out SimpleCASTest`; it exits with code `1` if any check fails.
 - There is no external test framework or build configuration; `SimpleCASTest` is a dependency-free regression harness.
 - Division uses Java integer-division semantics; decimal values are not supported.
-- `Main` currently calls the evaluator directly; the implemented `Semantic.analyze()` phase is not yet integrated into the runtime pipeline.
+- `Main` calls `Semantic.analyze()` after parsing and before evaluation. Semantic errors are reported by line, and the evaluator is not called for rejected ASTs.
 - Negative exponents, symbolic simplification, and symbolic differentiation are not implemented.
 - The parser and evaluator use unchecked exceptions for invalid input and evaluation errors; Main currently catches and formats them for the user.
 - `ASTNode` fields have package-private visibility and no accessor methods.
 
 ## Recommended next direction
 
-The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, assignments, malformed input, undefined variables, division by zero, and selected AST shapes. The next focus should be integrating the existing semantic-analysis phase into `Main` and adding direct semantic-analysis tests.
+The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, assignments, malformed input, undefined variables, division by zero, and selected AST shapes. The next focus should be adding direct semantic-analysis tests and then improving the language’s type/value model.
 
 ## Design decisions
 
