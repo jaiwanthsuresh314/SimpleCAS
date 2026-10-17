@@ -5,6 +5,14 @@ import java.util.HashMap;
 
 public class Main {
 
+    public static int evaluateLine(
+            String input,
+            Map<String, Integer> variables) {
+        ArrayList<String> tokens = new Lexer(input).tokenize();
+        ASTNode root = new Parser(tokens).parseStatement();
+        Semantic.analyze(root, variables);
+        return Evaluator.evaluate(root, variables);
+    }
 
     public static void main(String[] args) {
         Map<String, Integer> variables = new HashMap<>();
@@ -22,10 +30,7 @@ public class Main {
             }
 
             try {
-                ArrayList<String> tokens = new Lexer(input).tokenize();
-                ASTNode root = new Parser(tokens).parseStatement();
-                Semantic.analyze(root, variables);
-                System.out.println(Evaluator.evaluate(root, variables));
+                System.out.println(evaluateLine(input, variables));
             } catch (IllegalArgumentException | ArithmeticException e) {
                 System.out.println("Error on line " + lineNumber + ": " + e.getMessage());
                 exitCode = 1;

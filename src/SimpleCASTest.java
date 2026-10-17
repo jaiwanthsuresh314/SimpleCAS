@@ -31,6 +31,19 @@ public class SimpleCASTest {
         testAssignment("y=x^2+1", variables, 26);
         testVariableValue("y", variables, 26);
 
+        Map<String, Integer> pipelineVariables = new HashMap<>();
+        testPipeline("x=5", pipelineVariables, 5);
+        testPipeline("x+3", pipelineVariables, 8);
+        testPipeline("y=x^2+1", pipelineVariables, 26);
+        testPipeline("y", pipelineVariables, 26);
+        testSemanticAccepted("x+1", pipelineVariables);
+        testSemanticRejected("z+1", pipelineVariables,
+                "Undefined variable: z");
+        testPipelineRejected("z=missing+1", pipelineVariables,
+                "Undefined variable: missing");
+        check(!pipelineVariables.containsKey("z"),
+                "failed assignment does not update the symbol table");
+
         testRejected("10/0", "Division by zero");
         testRejected("2+", "Unexpected Token: EOF");
         testRejected("()", "Expected RPAREN, found EOF");
@@ -111,6 +124,55 @@ public class SimpleCASTest {
         }
     }
 
+    private static void testPipeline(String expression,
+                                     Map<String, Integer> variables,
+                                     int expected) {
+        try {
+            int actual = Main.evaluateLine(expression, variables);
+            check(actual == expected,
+                    expression + " full pipeline expected " + expected
+                            + ", got " + actual);
+        } catch (RuntimeException e) {
+            fail(expression + " unexpectedly failed in full pipeline: "
+                    + e.getMessage());
+        }
+    }
+
+    private static void testPipelineRejected(String expression,
+                                             Map<String, Integer> variables,
+                                             String expectedMessage) {
+        try {
+            Main.evaluateLine(expression, variables);
+            fail(expression + " should have been rejected by the full pipeline");
+        } catch (RuntimeException e) {
+            check(e.getMessage().equals(expectedMessage),
+                    expression + " produced the expected pipeline error");
+        }
+    }
+
+    private static void testSemanticAccepted(String expression,
+                                             Map<String, Integer> variables) {
+        try {
+            Semantic.analyze(parseStatement(expression), variables);
+            check(true, expression + " passed semantic analysis");
+        } catch (RuntimeException e) {
+            fail(expression + " unexpectedly failed semantic analysis: "
+                    + e.getMessage());
+        }
+    }
+
+    private static void testSemanticRejected(String expression,
+                                             Map<String, Integer> variables,
+                                             String expectedMessage) {
+        try {
+            Semantic.analyze(parseStatement(expression), variables);
+            fail(expression + " should have failed semantic analysis");
+        } catch (RuntimeException e) {
+            check(e.getMessage().equals(expectedMessage),
+                    expression + " produced the expected semantic error");
+        }
+    }
+
     private static void testAst(String expression, String rootValue,
                                 String leftValue, String leftLeftValue,
                                 String leftRightValue, String rightValue) {
@@ -156,6 +218,10 @@ public class SimpleCASTest {
 
     private static ASTNode parse(String expression) {
         return new Parser(new Lexer(expression).tokenize()).parse();
+    }
+
+    private static ASTNode parseStatement(String expression) {
+        return new Parser(new Lexer(expression).tokenize()).parseStatement();
     }
 
     private static void check(boolean condition, String message) {

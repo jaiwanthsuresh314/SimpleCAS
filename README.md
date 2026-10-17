@@ -67,6 +67,7 @@ ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN, ASSIGN
 - `Parser.parseStatement()` parses either an assignment or an ordinary expression. Assignment nodes store `=` with an identifier on the left and an expression on the right.
 - `Parser.parse()` rejects leftover tokens after the expression and returns the AST root on success.
 - `Parser.parseStatement()` uses lookahead to distinguish an assignment from an expression beginning with an identifier.
+- `Main.evaluateLine()` exposes the complete lexer-to-evaluator pipeline without requiring console input or output.
 - `ASTNode` stores a `value`, `left`, and `right`. Binary operator nodes store `+`, `-`, `*`, `/`, or `^`; assignment nodes store `=`; unary-minus nodes store `NEG` and use their left child.
 - `LanguageRules` provides shared checks for valid identifiers, integer literals, and binary operators.
 - `Evaluator.evaluate()` returns an `int` and handles all five binary operators plus `NEG`.
@@ -151,7 +152,7 @@ The following malformed or unsafe expressions were rejected as expected:
 ## Known limitations
 
 - `Main.java` reads multiple input lines, reports errors with their line number, continues after an error, and returns exit code `1` if any line fails.
-- `SimpleCASTest` can be run with `java -cp out SimpleCASTest`; it exits with code `1` if any check fails.
+- `SimpleCASTest` can be run with `java -cp out SimpleCASTest`; it exits with code `1` if any check fails. It covers direct evaluator behavior, semantic analysis, full-pipeline evaluation, and symbol-table updates.
 - There is no external test framework or build configuration; `SimpleCASTest` is a dependency-free regression harness.
 - Division uses Java integer-division semantics; decimal values are not supported.
 - `Main` calls `Semantic.analyze()` after parsing and before evaluation. Semantic errors are reported by line, and the evaluator is not called for rejected ASTs.
@@ -161,4 +162,4 @@ The following malformed or unsafe expressions were rejected as expected:
 
 ## Recommended next direction
 
-The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, assignments, malformed input, undefined variables, division by zero, and selected AST shapes. The next focus should be adding direct semantic-analysis tests and then improving the language’s type/value model.
+The current test harness verifies precedence, associativity, parentheses, unary minus, exponentiation, variables, assignments, semantic analysis, malformed input, undefined variables, division by zero, failed-assignment safety, and selected AST shapes. The next focus should be defining resource limits and integer overflow behavior for the eventual embedded implementation.
