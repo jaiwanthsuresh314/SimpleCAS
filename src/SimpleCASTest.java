@@ -57,6 +57,15 @@ public class SimpleCASTest {
         testUnaryAst("2*-3");
         testPowerAst("2^3^2");
 
+        testValue("2^10", 1024);
+        testValue("-2147483647-1", Integer.MIN_VALUE);
+        testRejected("2147483647+1", "Integer overflow");
+        testRejected("-2147483647-2", "Integer overflow");
+        testRejected("46341*46341", "Integer overflow");
+        testRejected("(-2147483647-1)/-1", "Integer overflow");
+        testRejected("2^31", "Integer overflow");
+        testRejected("2147483648", "Integer overflow");
+
         System.out.println("Tests passed: " + passed);
         System.out.println("Tests failed: " + failed);
 
