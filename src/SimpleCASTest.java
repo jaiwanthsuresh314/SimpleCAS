@@ -17,6 +17,7 @@ public class SimpleCASTest {
         testValue("2^3", 8);
         testValue("2^3^2", 512);
         testValue("2^3*4", 32);
+        testValue("0^0", 1);
         testValue("-2^2", -4);
         testValue("(-2)^2", 4);
 

@@ -75,6 +75,7 @@ ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN, ASSIGN
 - Assignment evaluation stores the computed value in the supplied map.
 - `Semantic.analyze()` traverses assignments, unary nodes, binary nodes, numbers, and identifiers. It checks assignment targets and reports undefined variables without modifying the symbol table.
 - Exponentiation uses checked exponentiation by squaring. Negative exponents are rejected because the evaluator currently represents only integer results.
+- The language defines `0^0` as `1`, which is useful for combinatorial calculations.
 - Division is integer division because the evaluator returns `int`. For example, `10/3` evaluates to `3`.
 - Division by zero is explicitly rejected with `ArithmeticException("Division by zero")`.
 - Addition, subtraction, multiplication, negation, division, exponentiation, and integer-literal parsing reject results outside the signed 32-bit range with `Integer overflow`.
