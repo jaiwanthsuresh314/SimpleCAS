@@ -74,9 +74,11 @@ ADD, SUB, MUL, DIV, POW, LPAREN, RPAREN, ASSIGN
 - `Evaluator.evaluate(root, variables)` resolves identifiers through a `Map<String, Integer>` and reports undefined variables clearly.
 - Assignment evaluation stores the computed value in the supplied map.
 - `Semantic.analyze()` traverses assignments, unary nodes, binary nodes, numbers, and identifiers. It checks assignment targets and reports undefined variables without modifying the symbol table.
-- Exponentiation uses repeated integer multiplication. Negative exponents are rejected because the evaluator currently represents only integer results.
+- Exponentiation uses checked exponentiation by squaring. Negative exponents are rejected because the evaluator currently represents only integer results.
+- The language defines `0^0` as `1`, which is useful for combinatorial calculations.
 - Division is integer division because the evaluator returns `int`. For example, `10/3` evaluates to `3`.
 - Division by zero is explicitly rejected with `ArithmeticException("Division by zero")`.
+- Addition, subtraction, multiplication, negation, division, exponentiation, and integer-literal parsing reject results outside the signed 32-bit range with `Integer overflow`.
 
 ## Compilation and execution
 
@@ -155,6 +157,7 @@ The following malformed or unsafe expressions were rejected as expected:
 - `SimpleCASTest` can be run with `java -cp out SimpleCASTest`; it exits with code `1` if any check fails. It covers direct evaluator behavior, semantic analysis, full-pipeline evaluation, and symbol-table updates.
 - There is no external test framework or build configuration; `SimpleCASTest` is a dependency-free regression harness.
 - Division uses Java integer-division semantics; decimal values are not supported.
+- Arithmetic uses signed 32-bit integers and rejects overflow instead of silently wrapping.
 - `Main` calls `Semantic.analyze()` after parsing and before evaluation. Semantic errors are reported by line, and the evaluator is not called for rejected ASTs.
 - Negative exponents, symbolic simplification, and symbolic differentiation are not implemented.
 - The parser and evaluator use unchecked exceptions for invalid input and evaluation errors; Main currently catches and formats them for the user.
